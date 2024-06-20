@@ -1,43 +1,44 @@
 import { Router } from 'express';
-import { __dirname } from '../helpers/path.js';
-import fs from 'fs';
-import ProductManager from '../managers/product.manager.js';
+import ProductService from '../services/product.services.js';
+import CartService from '../services/cart.services.js';
 
 const router = Router();
-const productManager = new ProductManager(`${__dirname}/db/products.json`);
 
-router.get('/', (req, res) => {
-    const productsFilePath = `${__dirname}/db/products.json`;
-    fs.readFile(productsFilePath, 'utf-8', (error, data) => {
-        if (error) {
-            console.log(`Error al leer el archivo: ${error.message}`);
-            return res.status(500).render('error', { title: 'Error', message: 'Error al cargar los productos. Inténtelo de nuevo más tarde.', error });
-        }
-        const prds = JSON.parse(data);
-        res.render('home', { title: 'Bienvenidos', prds });
-    });
-});
-
-router.get('/realtimeproducts', (req, res) => {
-    const productsFilePath = `${__dirname}/db/products.json`;
-    fs.readFile(productsFilePath, 'utf-8', (error, data) => {
-        if (error) {
-            console.log(`Error al leer el archivo: ${error.message}`);
-            return res.status(500).render('error', { title: 'Error', message: 'Error al cargar los productos. Inténtelo de nuevo más tarde.', error });
-        }
-        const prds = JSON.parse(data);
-        res.render('ralTimeProducts', { title: 'Real-Time Products', prds });
-    });
-});
-
-router.post('/add-product', async (req, res) => {
+// Ruta para obtener y renderizar productos con paginación y filtros
+router.get('/products', async (req, res) => {
     try {
-        const productData = req.body;
-        await productManager.createProduct(productData);
-        res.redirect('/realtimeproducts'); 
+        const { limit = 10, page = 1, sort, query } = req.query;
+        const options = {
+            limit: parseInt(limit, 10),
+            page: parseInt(page, 10),
+            sort: sort ? { price: sort === 'asc' ? 1 : -1 } : {},
+        };
+        const filters = query ? { category: query } : {};
+        const result = await ProductService.getProducts(filters, options);
+        res.render('products', {
+            title: 'Productos',
+            products: result.docs,
+            totalPages: result.totalPages,
+            prevPage: result.prevPage,
+            nextPage: result.nextPage,
+            page: result.page,
+            hasPrevPage: result.hasPrevPage,
+            hasNextPage: result.hasNextPage,
+            limit,
+            query
+        });
     } catch (error) {
-        console.log(`Error al agregar el producto: ${error.message}`);
-        res.status(500).render('error', { title: 'Error', message: 'Error al agregar el producto. Inténtelo de nuevo más tarde.', error });
+        res.status(500).send(error.message);
+    }
+});
+
+// Ruta para obtener y renderizar carritos
+router.get('/carts', async (req, res) => {
+    try {
+        const carts = await CartService.getCarts();
+        res.render('carts', { title: 'Carritos', carts });
+    } catch (error) {
+        res.status(500).send(error.message);
     }
 });
 
