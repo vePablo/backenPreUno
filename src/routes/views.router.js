@@ -4,7 +4,6 @@ import CartService from '../services/cart.services.js';
 
 const router = Router();
 
-// Ruta para obtener y renderizar productos con paginación y filtros
 router.get('/products', async (req, res) => {
     try {
         const { limit = 10, page = 1, sort, query } = req.query;
@@ -32,7 +31,6 @@ router.get('/products', async (req, res) => {
     }
 });
 
-// Ruta para obtener y renderizar carritos
 router.get('/carts', async (req, res) => {
     try {
         const carts = await CartService.getCarts();
