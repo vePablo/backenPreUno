@@ -10,6 +10,10 @@ class CartDAO {
     return await Cart.findById(id).populate('products.product');
   }
 
+  async getCartByUserId(userId) {
+    return await Cart.findOne({ userId }).populate('products.product');
+  }
+
   async updateCart(id, data) {
     return await Cart.findByIdAndUpdate(id, data, { new: true });
   }

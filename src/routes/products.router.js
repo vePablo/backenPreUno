@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { productDto } from '../dtos/product.dto.js';
 import {
   createProduct,
   getProductById,
@@ -9,10 +10,16 @@ import {
 
 const router = Router();
 
-router.post('/', createProduct); 
+router.post('/', (req, res, next) => {
+  req.body = new ProductDTO(req.body);
+  next();
+}, createProduct);
 router.get('/:id', getProductById); 
 router.get('/', getProducts);
-router.put('/:id', updateProduct);
+router.put('/:id', (req, res, next) => {
+  req.body = new ProductDTO(req.body);
+  next();
+}, updateProduct);
 router.delete('/:id', deleteProduct);
 
 export default router;

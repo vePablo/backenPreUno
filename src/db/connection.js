@@ -1,14 +1,19 @@
-import mongoose from 'mongoose'
+import mongoose from 'mongoose';
+import dotenv from 'dotenv'; 
 
-const connectString = 'mongodb+srv://admin:admin@cluster0.8vk9hbt.mongodb.net/testFinal1?retryWrites=true&w=majority&appName=Cluster0'
+dotenv.config(); 
 
+const connectString = process.env.MONGO_URI || 'mongodb://localhost:27017/defaultDB'; 
 const initMongoDB = async () => {
     try {
-        await mongoose.connect(connectString)
-        console.log("Conectado a la basee de datos")
+        if (!process.env.MONGO_URI) { 
+            console.warn('MONGO_URI no está definido en el archivo .env. Usando URL de conexión predeterminada.');
+        }
+        await mongoose.connect(connectString);
+        console.log("Conectado a la base de datos");
     } catch (error) {
-        console.log(error)
+        console.error("Error al conectar a la base de datos:", error);
     }
-}
+};
 
-initMongoDB()
+initMongoDB();

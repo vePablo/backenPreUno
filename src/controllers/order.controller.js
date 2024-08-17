@@ -51,3 +51,38 @@ export const deleteOrder = async (req, res) => {
     res.status(500).json({ status: 'error', message: error.message });
   }
 };
+export const addProductToOrder = async (req, res) => {
+  try {
+    const { orderId, productId, quantity } = req.body;
+    const updatedOrder = await OrderService.addProductToOrder(orderId, productId, quantity);
+    res.status(200).json({ status: 'success', payload: updatedOrder });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+};
+export const clearOrder = async (req, res) => {
+  try {
+    const order = await OrderService.clearOrder(req.params.id);
+    res.status(200).json({ status: 'success', payload: order });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+};
+export const removeProductFromOrder = async (req, res) => {
+  try {
+    const { orderId, productId } = req.params;
+    const updatedOrder = await OrderService.removeProductFromOrder(orderId, productId);
+    res.status(200).json({ status: 'success', payload: updatedOrder });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+};
+export const purchaseOrder = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const updatedOrder = await OrderService.purchaseOrder(orderId);
+    res.status(200).json({ status: 'success', payload: updatedOrder });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+};

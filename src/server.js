@@ -4,13 +4,13 @@ import handlebars from 'express-handlebars';
 import cookieParser from 'cookie-parser';
 import passport from 'passport';
 import { initializePassport } from './config/passport.config.js';
+import dotenv from 'dotenv';
+dotenv.config();
+
 
 // Importar rutas
-import productsRouter from './routes/products.router.js';
-import cartRouter from './routes/cart.router.js';
+import indexRouter from './routes/index.router.js';
 import viewsRouter from './routes/views.router.js';
-import userRouter from './routes/user.router.js';
-import sessionRouter from './routes/session.router.js';
 
 // Importar middlewares
 import { errorHandler } from './middlewares/errorHandler.js';
@@ -22,7 +22,7 @@ import { __dirname } from './helpers/path.js';
 import './db/connection.js';
 
 const app = express();
-const PORT = 8080;
+const PORT = process.env.PORT;
 
 // Configuración de Handlebars
 app.engine('handlebars', handlebars.engine());
@@ -38,11 +38,8 @@ initializePassport();
 app.use(passport.initialize());
 
 // Rutas
-app.use('/api/products', productsRouter);
-app.use('/api/carts', cartRouter);
+app.use('/api', indexRouter);
 app.use('/', viewsRouter);
-app.use('/api/users', userRouter); 
-app.use('/api/sessions', sessionRouter);
 
 // Middleware de manejo de errores
 app.use(errorHandler);

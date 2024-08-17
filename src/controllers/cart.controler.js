@@ -18,6 +18,15 @@ export const getCartById = async (req, res) => {
   }
 };
 
+export const getCartByUserId = async (req, res) => {
+  try {
+    const cart = await CartService.getCartByUserId(req.user._id);
+    res.status(200).json({ status: 'success', payload: cart });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+};
+
 export const updateCart = async (req, res) => {
   try {
     const cart = await CartService.updateCart(req.params.id, req.body);
@@ -62,5 +71,24 @@ export const clearCart = async (req, res) => {
     res.status(200).json({ status: 'success', payload: cart });
   } catch (error) {
     res.status(500).json({ status: 'error', message: error.message });
+  }
+};
+
+export const purchaseCart = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user._id;
+
+    const ticket = await CartService.purchase(id, userId);
+
+    res.status(200).json({
+      message: 'Compra finalizada',
+      ticket,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: 'Error al finalizar la compra',
+      details: error.message,
+    });
   }
 };

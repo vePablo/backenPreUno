@@ -15,20 +15,14 @@ const initializePassport = () => {
       { usernameField: 'email', passReqToCallback: true },
       async (req, email, password, done) => {
         try {
-    
           const user = await User.findOne({ email });
-
           if (!user) {
             return done(null, false, { message: 'Usuario no encontrado' });
           }
-
           const isMatch = await comparePassword(password, user.password);
-          
-
           if (!isMatch) {
             return done(null, false, { message: 'Contraseña incorrecta' });
           }
-
           return done(null, user);
         } catch (error) {
           return done(error);
@@ -45,7 +39,7 @@ const initializePassport = () => {
           const token = cookieExtractor(req);
           return token;
         }]),
-        secretOrKey: process.env.JWT_SECRET || 's3cr3t'
+        secretOrKey: process.env.JWT_SECRET
       },
       async (payload, done) => {
         try {

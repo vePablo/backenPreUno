@@ -72,4 +72,35 @@ export default class CartManager {
       console.log(error);
     }
   }
+
+  static async purchase(cartId, userId) {
+    const cart = await CartModel.findById(cartId).populate('products.product');
+
+    if (!cart) {
+      throw new Error('No se encontró el carrito');
+    }
+
+    const productsWithoutStock = [];
+
+    cart.products.forEach((p) => {
+      if (p.product.stock < p.quantity) {
+        productsWithoutStock.push(p.product.name);
+      }
+    });
+
+    if (productsWithoutStock.length > 0) {
+      throw new Error(`Los siguientes productos no tienen stock suficiente: ${productsWithoutStock.join(', ')}`);
+    }
+
+    // Descontar stock de los productos
+    await Promise.all(cart.products.map(async (p) => {
+      p.product.stock -= p.quantity;
+      await p.product.save();
+    }));
+
+    // Crear el ticket
+    const ticket = await TicketManager.createTicket(cart, userId);
+
+    return ticket;
+  }
 }  
