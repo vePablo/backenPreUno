@@ -1,14 +1,18 @@
 import UserService from '../services/user.services.js';
 import { generateToken } from '../helpers/jwt.js';
+import Joi from 'joi';
+import { userDto } from '../dtos/user.dto.js';
+
 
 export const register = async (req, res) => {
   try {
-    const { first_name, last_name, email, age, password, role } = req.body;
-
-    
-    if (!first_name || !last_name || !email || !age || !password) {
-      return res.status(400).json({ error: 'Missing fields' });
+    // Validar el body con joi
+    const { error } = userDto.validate(req.body);
+    if (error) {
+      return res.status(400).json({ error: error.details[0].message });
     }
+
+    const { first_name, last_name, email, age, password, role } = req.body;
 
     const newUser = await UserService.createUser({
       first_name,
@@ -49,12 +53,14 @@ export const login = (req, res) => {
   };
   
   export const current = (req, res) => {
-    console.log('Usuario actual:', req.user);
+    const user = req.user.toObject();
+      const { password, ...userData } = user;
     res.status(200).json({
       message: 'Bienvenido',
-      user: req.user,
+      user: userData,
     });
   };
+  
   
 
 export const logout = (req, res) => {
