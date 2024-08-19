@@ -1,6 +1,7 @@
 import { verifyToken } from '../helpers/jwt.js';
 
 const authMiddleware = (req, res, next) => {
+  console.log('Authorization Header:', req.headers.authorization);
   const token = req.cookies.token;
 
   if (!token) {

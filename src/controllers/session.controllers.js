@@ -45,7 +45,9 @@ export const login = (req, res) => {
       maxAge: 100000,
       httpOnly: true,
     });
-  
+    
+    console.log('Cookies después de login:', req.cookies);
+
     res.status(200).json({
       message: 'Login success',
       token,
