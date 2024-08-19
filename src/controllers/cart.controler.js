@@ -1,4 +1,53 @@
 import CartService from '../services/cart.services.js';
+import { generateTicket } from '../helpers/ticket.js';
+import ProductService from '../services/product.services.js';
+import OrderService from '../services/order.services.js'; 
+
+export const purchaseCart = async (req, res) => {
+  try {
+    // Verificar si el usuario está autenticado
+    if (!req.user) {
+      return res.status(401).json({ error: 'No autenticado' });
+    }
+
+    const { cartId } = req.body;
+    
+    // Obtener el carrito del usuario
+    const cart = await CartService.getCartById(cartId);
+    if (!cart) {
+      return res.status(404).json({ error: 'Carrito no encontrado' });
+    }
+
+    // Verificar stock de los productos en el carrito
+    for (const item of cart.items) {
+      const product = await ProductService.getProductById(item.productId);
+      if (product.stock < item.quantity) {
+        return res.status(400).json({ error: `No hay suficiente stock para el producto ${product.name}` });
+      }
+    }
+
+    // Crear pedido
+    const order = await OrderService.createOrder({
+      userId: req.user._id,
+      items: cart.items,
+      total: cart.total,
+    });
+
+    // Actualizar stock
+    for (const item of cart.items) {
+      await ProductService.updateStock(item.productId, item.quantity);
+    }
+
+    // Limpiar carrito
+    await CartService.clearCart(cartId);
+
+    // Generar y devolver ticket
+    const ticket = generateTicket(order);
+    res.status(200).json({ message: 'Compra realizada con éxito', order, ticket });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
 export const createCart = async (req, res) => {
   try {
@@ -71,24 +120,5 @@ export const clearCart = async (req, res) => {
     res.status(200).json({ status: 'success', payload: cart });
   } catch (error) {
     res.status(500).json({ status: 'error', message: error.message });
-  }
-};
-
-export const purchaseCart = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const userId = req.user._id;
-
-    const ticket = await CartService.purchase(id, userId);
-
-    res.status(200).json({
-      message: 'Compra finalizada',
-      ticket,
-    });
-  } catch (error) {
-    res.status(500).json({
-      error: 'Error al finalizar la compra',
-      details: error.message,
-    });
   }
 };

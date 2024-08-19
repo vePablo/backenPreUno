@@ -1,4 +1,6 @@
 import CartDAO from '../daos/cart.dao.js';
+import ProductDAO from '../daos/product.dao.js';
+import TicketManager from '../managers/ticket.manager.js'; // Asegúrate de que esté importado correctamente
 
 class CartService {
   async createCart(data) {
@@ -40,20 +42,32 @@ class CartService {
       throw new Error('Cart not found');
     }
 
-    // Check for stock and handle ticket creation
-    const productsWithoutStock = cart.products.filter(p => p.product.stock < p.quantity);
+    // Verificar stock
+    const products = await Promise.all(cart.products.map(async (p) => {
+      const product = await ProductDAO.getProductById(p.productId);
+      return {
+        product,
+        quantity: p.quantity
+      };
+    }));
+
+    const productsWithoutStock = products.filter(p => p.product.stock < p.quantity);
+
     if (productsWithoutStock.length > 0) {
       throw new Error(`Insufficient stock for products: ${productsWithoutStock.map(p => p.product.name).join(', ')}`);
     }
 
     // Deduct stock
-    await Promise.all(cart.products.map(async (p) => {
+    await Promise.all(products.map(async (p) => {
       p.product.stock -= p.quantity;
-      await p.product.save();
+      await ProductDAO.updateProduct(p.product._id, { stock: p.product.stock });
     }));
 
-    // Create ticket
+    // Crear ticket
     const ticket = await TicketManager.createTicket(cart, userId);
+
+    // Limpiar carrito
+    await this.clearCart(cartId);
 
     return ticket;
   }

@@ -1,17 +1,18 @@
 import { Schema, model } from 'mongoose';
 
 const ticketSchema = new Schema({
-  name: { type: String, required: true },
-  price: { type: Number, required: true },
-  description: { type: String, required: true },
-  image: { type: String, required: true },
-  category: { type: String, required: true },
-  status: { type: String, required: true },
-},
-{
-  timestamps:true,
-}
-);
+  code: { type: String, required: true, unique: true },
+  purchase_datetime: { type: Date, required: true },
+  amount: { type: Number, required: true },
+  purchaser: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  products: [{
+    productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
+    quantity: { type: Number, required: true },
+    price: { type: Number, required: true }
+  }]
+}, {
+  timestamps: true
+});
 
 const Ticket = model('Ticket', ticketSchema);
 

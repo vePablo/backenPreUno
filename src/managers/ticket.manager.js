@@ -13,6 +13,11 @@ class TicketManager {
       purchase_datetime: new Date(),
       amount,
       purchaser: userId,
+      products: cart.products.map(p => ({
+        productId: p.product._id,
+        quantity: p.quantity,
+        price: p.product.price
+      }))
     });
 
     return ticket;
