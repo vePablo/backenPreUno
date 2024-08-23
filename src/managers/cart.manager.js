@@ -1,106 +1,78 @@
-import { __dirname } from "../helpers/path.js"
-import fs from "fs";
-import { v4 as uuidv4 } from "uuid";
+import CartModel from '../models/cart.models.js';
+import ProductModel from '../models/product.models.js';
+import TicketManager from './ticket.manager.js';
 
-import ProductManager from "./product.manager.js";
-const productManager = new ProductManager(`${__dirname}/db/products.json`);
-
-export default class CartManager {
-  constructor(path) {
-    this.path = path;
-  }
-
-  async getAllCarts() {
+class CartManager {
+  static async getCartById(id) {
     try {
-      if (fs.existsSync(this.path)) {
-        const carts = await fs.promises.readFile(this.path, "utf-8");
-        const cartsJSON = JSON.parse(carts);
-        return cartsJSON;
-      } else {
-        return [];
+      const cart = await CartModel.findById(id).populate('products.product');
+      if (!cart) {
+        throw new Error('Cart not found');
       }
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
-  async createCart() {
-    try {
-      const cart = {
-        id: uuidv4(),
-        products: [],
-      }
-      const carts = await this.getAllCarts();
-      carts.push(cart);
-      await fs.promises.writeFile(this.path, JSON.stringify(carts));
       return cart;
     } catch (error) {
-      console.log(error);
+      throw new Error('Error getting cart by ID: ' + error.message);
     }
   }
 
-  async getCartById(id) {
+  static async updateCart(id, updateData) {
     try {
-      const carts = await this.getAllCarts();
-      const cart = carts.find((c) => c.id === id);
-      if (!cart) return null;
+      const cart = await CartModel.findByIdAndUpdate(id, updateData, { new: true });
+      if (!cart) {
+        throw new Error('Cart not found');
+      }
       return cart;
     } catch (error) {
-      console.log(error);
+      throw new Error('Error updating cart: ' + error.message);
     }
   }
 
-  async saveProductToCart(idCart, idProduct) {
+  static async isStockSufficient(productId, quantity) {
     try {
-      const prodExist = await productManager.getProductById(idProduct);
-      if (!prodExist) throw new Error('Product not found');
-  
-      let carts = await this.getAllCarts();
-      let cartExist = carts.find(cart => cart.id === idCart);
-      if (!cartExist) throw new Error('Cart not found');
-  
-      const existingProductIndex = cartExist.products.findIndex(prod => prod.product === idProduct);
-      if (existingProductIndex !== -1) {
-        cartExist.products[existingProductIndex].quantity++;
-      } else {
-        cartExist.products.push({ product: idProduct, quantity: 1 });
+      const product = await ProductModel.findById(productId);
+      if (!product) {
+        throw new Error('Product not found');
       }
-  
-      await fs.promises.writeFile(this.path, JSON.stringify(carts));
-      return cartExist;
+      return product.stock >= quantity;
     } catch (error) {
-      console.log(error);
+      throw new Error('Error checking stock: ' + error.message);
     }
   }
 
-  static async purchase(cartId, userId) {
-    const cart = await CartModel.findById(cartId).populate('products.product');
-
-    if (!cart) {
-      throw new Error('No se encontró el carrito');
-    }
-
-    const productsWithoutStock = [];
-
-    cart.products.forEach((p) => {
-      if (p.product.stock < p.quantity) {
-        productsWithoutStock.push(p.product.name);
+  static async purchase(cartId, userEmail) {
+    try {
+      const cart = await CartManager.getCartById(cartId);
+      const productsWithoutStock = [];
+  
+      for (const p of cart.products) {
+        const isSufficient = await CartManager.isStockSufficient(p.product._id, p.quantity);
+        if (!isSufficient) {
+          productsWithoutStock.push(p.product.name);
+        }
       }
-    });
-
-    if (productsWithoutStock.length > 0) {
-      throw new Error(`Los siguientes productos no tienen stock suficiente: ${productsWithoutStock.join(', ')}`);
+  
+      if (productsWithoutStock.length > 0) {
+        throw new Error(`Los siguientes productos no tienen stock suficiente: ${productsWithoutStock.join(', ')}`);
+      }
+  
+      await Promise.all(cart.products.map(async (p) => {
+        const product = await ProductModel.findById(p.product._id);
+        if (!product) {
+          throw new Error('Product not found');
+        }
+        product.stock -= p.quantity;
+        await product.save();
+      }));
+  
+      const ticket = await TicketManager.createTicket(cart, userEmail);
+  
+      await CartManager.updateCart(cartId, { products: [] });
+  
+      return ticket;
+    } catch (error) {
+      throw new Error('Error processing purchase: ' + error.message);
     }
+  }  
+}
 
-    // Descontar stock de los productos
-    await Promise.all(cart.products.map(async (p) => {
-      p.product.stock -= p.quantity;
-      await p.product.save();
-    }));
-
-    // Crear el ticket
-    const ticket = await TicketManager.createTicket(cart, userId);
-
-    return ticket;
-  }
-}  
+export default CartManager;

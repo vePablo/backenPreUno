@@ -1,9 +1,9 @@
-import TicketModel from '../models/ticket.models.js';
+import Ticket from '../models/ticket.models.js';
 
 class TicketDAO {
   async create(ticketData) {
     try {
-      const ticket = new TicketModel(ticketData);
+      const ticket = new Ticket(ticketData);
       return await ticket.save();
     } catch (error) {
       throw new Error('Error creating ticket: ' + error.message);
@@ -12,7 +12,7 @@ class TicketDAO {
 
   async getById(id) {
     try {
-      return await TicketModel.findById(id);
+      return await Ticket.findById(id);
     } catch (error) {
       throw new Error('Error getting ticket by ID: ' + error.message);
     }
@@ -20,7 +20,7 @@ class TicketDAO {
 
   async update(id, ticketData) {
     try {
-      return await TicketModel.findByIdAndUpdate(id, ticketData, { new: true });
+      return await Ticket.findByIdAndUpdate(id, ticketData, { new: true });
     } catch (error) {
       throw new Error('Error updating ticket: ' + error.message);
     }
@@ -28,7 +28,7 @@ class TicketDAO {
 
   async delete(id) {
     try {
-      return await TicketModel.findByIdAndDelete(id);
+      return await Ticket.findByIdAndDelete(id);
     } catch (error) {
       throw new Error('Error deleting ticket: ' + error.message);
     }

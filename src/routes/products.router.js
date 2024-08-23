@@ -17,7 +17,7 @@ router.post('/', (req, res, next) => {
 router.get('/:id', getProductById); 
 router.get('/', getProducts);
 router.put('/:id', (req, res, next) => {
-  req.body = new ProductDTO(req.body);
+  req.body = new productDto(req.body);
   next();
 }, updateProduct);
 router.delete('/:id', deleteProduct);

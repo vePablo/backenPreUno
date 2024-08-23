@@ -22,18 +22,30 @@ class CartDAO {
     return await Cart.findByIdAndDelete(id);
   }
 
-  async addProductToCart(cartId, productId, quantity) {
+  async addProductsToCart(cartId, products) {
     const cart = await this.getCartById(cartId);
-    const productIndex = cart.products.findIndex(p => p.product.toString() === productId);
-
-    if (productIndex > -1) {
-      cart.products[productIndex].quantity += quantity;
-    } else {
-      cart.products.push({ product: productId, quantity });
+    console.log('DAO: Retrieved cart:', cart);
+  
+    for (const { product, quantity } of products) {
+      if (!product || !quantity) {
+        console.log('DAO error: Missing product or quantity');
+        throw new Error('Missing product or quantity');
+      }
+  
+      console.log('Processing product:', product, 'Quantity:', quantity);
+      const productIndex = cart.products.findIndex(p => p.product.toString() === product.toString());
+  
+      if (productIndex > -1) {
+        cart.products[productIndex].quantity += quantity;
+      } else {
+        cart.products.push({ product, quantity });
+      }
     }
-
+  
+    console.log('Saving cart with updated products');
     return await cart.save();
   }
+  
 
   async removeProductFromCart(cartId, productId) {
     const cart = await this.getCartById(cartId);

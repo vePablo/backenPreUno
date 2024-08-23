@@ -1,51 +1,38 @@
 import CartService from '../services/cart.services.js';
-import { generateTicket } from '../helpers/ticket.js';
+import TicketService from '../services/ticket.services.js';
 import ProductService from '../services/product.services.js';
 import OrderService from '../services/order.services.js'; 
 
-export const purchaseCart = async (req, res) => {
+export const purchaseCart = async (cartId, userEmail) => {
   try {
-    // Verificar si el usuario está autenticado
-    if (!req.user) {
-      return res.status(401).json({ error: 'No autenticado' });
-    }
-
-    const { cartId } = req.body;
-    
-    // Obtener el carrito del usuario
     const cart = await CartService.getCartById(cartId);
     if (!cart) {
-      return res.status(404).json({ error: 'Carrito no encontrado' });
+      throw new Error('Carrito no encontrado');
     }
 
-    // Verificar stock de los productos en el carrito
     for (const item of cart.items) {
       const product = await ProductService.getProductById(item.productId);
       if (product.stock < item.quantity) {
-        return res.status(400).json({ error: `No hay suficiente stock para el producto ${product.name}` });
+        throw new Error(`No hay suficiente stock para el producto ${product.name}`);
       }
     }
 
-    // Crear pedido
     const order = await OrderService.createOrder({
-      userId: req.user._id,
+      userId: cart.userId,  // Asumiendo que el carrito tiene un userId asociado
       items: cart.items,
       total: cart.total,
     });
 
-    // Actualizar stock
     for (const item of cart.items) {
       await ProductService.updateStock(item.productId, item.quantity);
     }
 
-    // Limpiar carrito
     await CartService.clearCart(cartId);
 
-    // Generar y devolver ticket
-    const ticket = generateTicket(order);
-    res.status(200).json({ message: 'Compra realizada con éxito', order, ticket });
+    const ticket = await TicketService.createTicket (cart, userEmail);
+    return { message: 'Compra realizada con éxito', cart, ticket };
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    throw new Error(`Error en la compra: ${error.message}`);
   }
 };
 
@@ -69,7 +56,8 @@ export const getCartById = async (req, res) => {
 
 export const getCartByUserId = async (req, res) => {
   try {
-    const cart = await CartService.getCartByUserId(req.user._id);
+    const userId = req.params.userId;
+    const cart = await CartService.getCartByUserId(userId);
     res.status(200).json({ status: 'success', payload: cart });
   } catch (error) {
     res.status(500).json({ status: 'error', message: error.message });
@@ -94,15 +82,26 @@ export const deleteCart = async (req, res) => {
   }
 };
 
-export const addProductToCart = async (req, res) => {
+export const addProductsToCart = async (req, res) => {
   try {
-    const { productId, quantity } = req.body;
-    const cart = await CartService.addProductToCart(req.params.id, productId, quantity);
+    const products = req.body.products;
+
+    if (!Array.isArray(products)) {
+      console.log('Invalid input: Products should be an array');
+      throw new Error('Products should be an array');
+    }
+
+    console.log('Adding products to cart:', products);
+
+    const cart = await CartService.addProductsToCart(req.params.id, products);
     res.status(200).json({ status: 'success', payload: cart });
   } catch (error) {
+    console.error('Error in addProductsToCart:', error);
     res.status(500).json({ status: 'error', message: error.message });
   }
 };
+
+
 
 export const removeProductFromCart = async (req, res) => {
   try {
