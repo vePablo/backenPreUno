@@ -82,26 +82,24 @@ export const deleteCart = async (req, res) => {
   }
 };
 
-export const addProductsToCart = async (req, res) => {
+export async function addProductToCart(req, res) {
   try {
-    const products = req.body.products;
+    const cartId = req.params.id;
+    const { productId, quantity } = req.body;
 
-    if (!Array.isArray(products)) {
-      console.log('Invalid input: Products should be an array');
-      throw new Error('Products should be an array');
-    }
+    console.log(`Cuerpo de la solicitud: ${JSON.stringify(req.body)}`);
+    console.log(`ID del Producto Recibido: ${productId}`);
 
-    console.log('Adding products to cart:', products);
+    const updatedCart = await CartService.addProductToCart(cartId, productId, quantity);
 
-    const cart = await CartService.addProductsToCart(req.params.id, products);
-    res.status(200).json({ status: 'success', payload: cart });
+    res.json(updatedCart);
   } catch (error) {
-    console.error('Error in addProductsToCart:', error);
-    res.status(500).json({ status: 'error', message: error.message });
+    res.status(500).json({
+      error: "Error al agregar producto al carrito",
+      details: error.message,
+    });
   }
-};
-
-
+}
 
 export const removeProductFromCart = async (req, res) => {
   try {
