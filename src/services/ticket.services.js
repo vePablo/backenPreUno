@@ -2,25 +2,20 @@ import TicketDAO from '../daos/ticket.dao.js';
 import { v4 as uuidv4 } from 'uuid';
 
 class TicketService {
-  static async createTicket(cart, userEmail) {
-    const amount = cart.products.reduce(
-      (acc, curr) => acc + curr.quantity * curr.product.price,
-      0
-    );
-
+  static async createTicket(cart, userId, totalAmount) {
     const ticketData = {
       code: uuidv4(),
       purchase_datetime: new Date(),
-      amount,
-      purchaser: userEmail,  // Cambiado de userId a userEmail
+      amount: totalAmount,
+      purchaser: userId,
       products: cart.products.map(p => ({
-        productId: p.product._id,
+        product: p.product._id,
         quantity: p.quantity,
-        price: p.product.price
-      }))
+        price: p.product.price,
+      })),
     };
 
-    return TicketDAO.create(ticketData);
+    return await TicketDAO.create(ticketData);
   }
 
   static async getTicketById(id) {

@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import authMiddleware from '../middlewares/auth.middleware.js';
+import { purchaseCart } from '../controllers/purchase.controllers.js';
 import {
   createCart,
   getCartById,
@@ -7,7 +9,6 @@ import {
   addProductToCart,
   removeProductFromCart,
   clearCart,
-  purchaseCart,
   getCartByUserId
 } from '../controllers/cart.controler.js';
 
@@ -21,6 +22,8 @@ router.put('/:id', updateCart);
 router.delete('/:id', deleteCart);
 router.delete('/:id/products/:productId', removeProductFromCart);
 router.delete('/:id/products', clearCart);
-router.post('/:id/purchase', purchaseCart);
-
+router.post('/:id/purchase', authMiddleware, purchaseCart);
+//Cannot read properties of undefined (reading 'stock') 
+//revisa la funcion que maneja el stock
+//Problemas con las cookies en el momento de hacer purcahse: Authorization Header: undefined
 export default router;

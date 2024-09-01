@@ -21,6 +21,15 @@ class UserDAO {
   async deleteUser(id) {
     return await User.findByIdAndDelete(id);
   }
+
+  async getUserByEmail(email) {
+    try {
+      const user = await UserModel.findOne({ email });
+      return user;
+    } catch (error) {
+      throw new Error('Error fetching user by email');
+    }
+  };
 }
 
 export default new UserDAO();

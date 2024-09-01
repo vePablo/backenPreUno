@@ -3,6 +3,8 @@ import local from 'passport-local';
 import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
 import User from '../models/user.models.js';
 import { comparePassword } from '../helpers/hash.js';
+import dotenv from 'dotenv';
+dotenv.config();
 
 const LocalStrategy = local.Strategy;
 const JWTStrategy = JwtStrategy;

@@ -8,9 +8,9 @@ const orderSchema = new Schema({
     price: { type: Number, required: true }
   }],
   total: { type: Number, required: true },
-  status: { type: String, enum: ['pending', 'completed', 'canceled'], default: 'pending' },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
+  status: { type: String, enum: ['pending', 'completed', 'canceled'], default: 'pending' }
+},{ 
+  timestamps: true 
 });
 
 const Order = model('Order', orderSchema);

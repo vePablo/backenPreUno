@@ -1,38 +1,17 @@
 import CartService from '../services/cart.services.js';
-import TicketService from '../services/ticket.services.js';
-import ProductService from '../services/product.services.js';
-import OrderService from '../services/order.services.js'; 
+import PurchaseService from '../services/purchase.services.js';
 
 export const purchaseCart = async (cartId, userEmail) => {
   try {
-    const cart = await CartService.getCartById(cartId);
-    if (!cart) {
-      throw new Error('Carrito no encontrado');
-    }
+    const cartId = req.params.cid;
+    const userEmail = req.user.email;  // Suponiendo que userEmail ya está disponible en req.user gracias al middleware.
 
-    for (const item of cart.items) {
-      const product = await ProductService.getProductById(item.productId);
-      if (product.stock < item.quantity) {
-        throw new Error(`No hay suficiente stock para el producto ${product.name}`);
-      }
-    }
+    // Llamar al servicio de compra para manejar la lógica
+    const result = await PurchaseService.processPurchase(cartId, userEmail);
 
-    const order = await OrderService.createOrder({
-      userId: cart.userId,  // Asumiendo que el carrito tiene un userId asociado
-      items: cart.items,
-      total: cart.total,
-    });
-
-    for (const item of cart.items) {
-      await ProductService.updateStock(item.productId, item.quantity);
-    }
-
-    await CartService.clearCart(cartId);
-
-    const ticket = await TicketService.createTicket (cart, userEmail);
-    return { message: 'Compra realizada con éxito', cart, ticket };
+    res.status(201).json({ status: 'success', payload: result });
   } catch (error) {
-    throw new Error(`Error en la compra: ${error.message}`);
+    res.status(500).json({ status: 'error', message: error.message });
   }
 };
 
