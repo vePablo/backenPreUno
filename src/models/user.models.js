@@ -8,6 +8,7 @@ const userSchema = new Schema({
   age: { type: Number, required: true },
   password: { type: String, required: true },
   cart: { type: mongoose.Schema.Types.ObjectId, ref: 'Carts' },
+  pets: { type: [String], default: [] },
   role: { type: String, enum: ["admin", "user"], default: "user" },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }

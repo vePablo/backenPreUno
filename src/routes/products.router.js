@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import {productValidator} from '../middlewares/productValidator.js';
 import { productDto } from '../dtos/product.dto.js';
 import {
   createProduct,
@@ -11,15 +12,15 @@ import {
 const router = Router();
 
 router.post('/', (req, res, next) => {
-  req.body = new ProductDTO(req.body);
+  req.body = new productDto(req.body);
   next();
-}, createProduct);
+}, productValidator, createProduct);
 router.get('/:id', getProductById); 
 router.get('/', getProducts);
 router.put('/:id', (req, res, next) => {
   req.body = new productDto(req.body);
   next();
-}, updateProduct);
+}, productValidator, updateProduct);
 router.delete('/:id', deleteProduct);
 
 export default router;

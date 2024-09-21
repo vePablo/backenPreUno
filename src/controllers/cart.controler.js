@@ -1,20 +1,6 @@
 import CartService from '../services/cart.services.js';
 import PurchaseService from '../services/purchase.services.js';
 
-export const purchaseCart = async (cartId, userEmail) => {
-  try {
-    const cartId = req.params.cid;
-    const userEmail = req.user.email;  // Suponiendo que userEmail ya está disponible en req.user gracias al middleware.
-
-    // Llamar al servicio de compra para manejar la lógica
-    const result = await PurchaseService.processPurchase(cartId, userEmail);
-
-    res.status(201).json({ status: 'success', payload: result });
-  } catch (error) {
-    res.status(500).json({ status: 'error', message: error.message });
-  }
-};
-
 export const createCart = async (req, res) => {
   try {
     const cart = await CartService.createCart(req.body);

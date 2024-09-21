@@ -5,8 +5,8 @@ import ProductService from './product.services.js';
 
 class PurchaseService {
   async processPurchase(cartId, userEmail) {
-    // 1. Obtener el carrito
-    const cart = await CartService.getCartById(cartId);
+    // 1. Obtener el carrito y popular
+    const cart = await CartService.getCartById(cartId).populate('products.product');
     if (!cart) throw new Error('Carrito no encontrado');
 
     // 2. Verificar stock
